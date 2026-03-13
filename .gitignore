@@ -1,0 +1,30 @@
+# Python 字节码缓存（自动生成，无需跟踪）
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 旧版数据收集模块（已废弃，仅供参考）
+旧数据收集模块/
+
+# 运行时进度文件（动态生成，不纳入版本控制）
+collection_progress.json
+collection_full_history_progress.json
+collection_latest_progress.json
+
+# 数据目录（体积大，不纳入版本控制）
+data_hourly/
+data_daily/
+data_new/
+
+# 大型缓存文件
+getdata/all_items_cache.json
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
