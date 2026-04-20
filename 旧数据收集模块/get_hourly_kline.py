@@ -20,9 +20,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 配置
 ALL_ITEMS_CACHE_FILE = os.path.join(BASE_DIR, "all_items_cache.json")
-DATA_DIR = os.path.join(BASE_DIR, "data_new")
-ITEM_IDS_FILE = os.path.join(BASE_DIR, "getdata", "itemid.txt")
-ITEM_ID_MARKET_MAP_FILE = os.path.join(BASE_DIR, "getdata", "itemid_market_map.json")
+DATA_DIR = os.path.join(BASE_DIR, "legacy_data")
+ITEM_IDS_FILE = os.path.join(BASE_DIR, "..", "mappings", "itemid.txt")
+ITEM_ID_MARKET_MAP_FILE = os.path.join(BASE_DIR, "..", "mappings", "itemid_market_map.json")
 
 API_URL = "https://api.steamdt.com/user/steam/category/v1/kline"
 ACCESS_TOKEN = "33de8b36-b2c9-455f-8e35-4774746121c5"

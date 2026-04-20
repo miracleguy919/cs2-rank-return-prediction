@@ -94,17 +94,24 @@ def save_kline_data(item_id, hourly_data, daily_data):
             print(f"      ℹ️  日K线: 无新数据")
 
 def load_progress():
-    """加载进度"""
+    """加载进度（跨天自动重置）"""
+    today = datetime.now().strftime("%Y-%m-%d")
     if os.path.exists(PROGRESS_FILE):
         try:
             with open(PROGRESS_FILE, "r", encoding="utf-8") as f: 
-                return json.load(f)
+                progress = json.load(f)
+            # 如果不是今天的进度，自动重置
+            if progress.get("date") != today:
+                print(f"📅 检测到新的一天 ({today})，自动重置进度...")
+                return {"date": today, "completed": [], "failed": [], "last_index": 0}
+            return progress
         except: 
             pass
-    return {"completed": [], "failed": [], "last_index": 0}
+    return {"date": today, "completed": [], "failed": [], "last_index": 0}
 
 def save_progress(progress):
     """保存进度"""
+    progress["date"] = datetime.now().strftime("%Y-%m-%d")
     with open(PROGRESS_FILE, "w", encoding="utf-8") as f: 
         json.dump(progress, f, ensure_ascii=False, indent=2)
 

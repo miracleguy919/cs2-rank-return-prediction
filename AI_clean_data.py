@@ -3,12 +3,12 @@
 # =============================================================================
 # 模块：数据处理 - 数据清洗与标准化
 # 文件：AI_clean_data.py  [AI创建]
-# 用途：清洗data_hourly/或data_daily/中的K线数据：
+# 用途：清洗data/hourly/或data/daily/中的K线数据：
 #       1. 将非整点时间戳规范化到最近整点（小时K线）或每天16:00（日K线）
 #       2. 使用线性插值填补缺失的时间点
 #       3. 去重处理（相同时间戳只保留一条）
 #       4. 验证所有饰品数据量对齐
-# 使用：python AI_clean_data.py --dir data_daily [--dry-run]
+# 使用：python AI_clean_data.py --dir data/daily [--dry-run]
 # =============================================================================
 """
 数据清洗和验证脚本
@@ -254,7 +254,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='数据清洗和验证脚本')
-    parser.add_argument('--dir', type=str, default='data_hourly', help='数据目录 (data_hourly 或 data_daily)')
+    parser.add_argument('--dir', type=str, default='data/hourly', help='数据目录 (data/hourly 或 data/daily)')
     parser.add_argument('--ids', type=str, nargs='+', help='指定要处理的ID列表，不指定则处理所有')
     parser.add_argument('--normalize', action='store_true', default=True, help='标准化时间戳')
     parser.add_argument('--fill', action='store_true', default=True, help='填补缺失点')

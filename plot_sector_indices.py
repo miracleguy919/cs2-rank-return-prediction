@@ -39,7 +39,7 @@ _plot_parser.add_argument(
     "--kline-type",
     choices=["hourly", "daily", "legacy"],
     default="daily",
-    help="K线数据类型: hourly(data_hourly/), daily(data_daily/), legacy(data_new/)",
+    help="K线数据类型: hourly(data/hourly/), daily(data/daily/), legacy(旧数据收集模块/legacy_data/)",
 )
 _plot_args, _ = _plot_parser.parse_known_args()
 

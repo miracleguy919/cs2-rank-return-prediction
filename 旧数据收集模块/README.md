@@ -6,19 +6,19 @@
 
 ### 1. get_hourly_kline.py
 - **功能**: 获取最新的小时K线数据
-- **数据目录**: `data_new/`
+- **数据目录**: `legacy_data/`
 - **问题**: API限流严重，容易被封禁
 - **状态**: ❌ 已废弃
 
 ### 2. backfill_hourly_kline.py
 - **功能**: 批量回填历史K线数据
-- **数据目录**: `data_new/`
+- **数据目录**: `legacy_data/`
 - **问题**: API限流严重，容易被封禁
 - **状态**: ❌ 已废弃
 
 ### 3. AI_batch_download_safe.py
 - **功能**: 安全批量下载（改进版）
-- **数据目录**: `data_new/`
+- **数据目录**: `legacy_data/`
 - **问题**: 仍然会被限流
 - **状态**: ❌ 已废弃
 
@@ -37,12 +37,12 @@ python AI_collect_dual_kline.py
 - ✅ 支持增量更新
 
 **数据目录**：
-- `data_hourly/` - 小时K线
-- `data_daily/` - 日K线
+- `data/hourly/` - 小时K线
+- `data/daily/` - 日K线
 
 ## ⚠️ 注意事项
 
-本文件夹中的脚本仅供参考，不建议使用。如需使用旧数据，请保留 `data_new/` 目录。
+本文件夹中的脚本仅供参考，不建议使用。如需使用旧数据，请保留 `legacy_data/` 目录。
 
 ---
 

@@ -3,7 +3,7 @@
 # 模块：数据收集 - 手动历史数据收集
 # 文件：AI_collect_dual_kline.py  [AI创建]
 # 用途：打开真实浏览器访问steamdt.com，拦截API响应，同时收集并保存
-#       小时K线（data_hourly/）和日K线（data_daily/）。
+#       小时K线（data/hourly/）和日K线（data/daily/）。
 #       用户手动点击/滑动K线图，脚本自动累积历史数据，自动检测饰品切换。
 # 使用：python AI_collect_dual_kline.py
 # =============================================================================

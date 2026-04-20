@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # =============================================================================
-# 模块：机器学习流程 - 回测  [原工程 / TBD]
-# 文件：TBD/backtest_xgb.py
-# 用途：使用训练好的XGBoost模型对历史数据进行推理，模拟交易策略并回测。
-#       支持自定义时间范围、多种策略对比和完整的资金管理。
-#       输出回测结果图表和统计指标。
-# 使用：python TBD/backtest_xgb.py
-#       需先运行 TBD/train_xgb.py 训练模型。
+# 模块:机器学习流程 - 回测  [原工程 / TBD]
+# 文件:TBD/backtest_xgb.py
+# 用途:使用训练好的XGBoost模型对历史数据进行推理,模拟交易策略并回测.
+#       支持自定义时间范围、多种策略对比和完整的资金管理.
+#       输出回测结果图表和统计指标.
+# 使用:python TBD/backtest_xgb.py
+#       需先运行 TBD/train_xgb.py 训练模型.
 # =============================================================================
-"""
 
 import os
 import sys
@@ -101,13 +100,13 @@ def _configure_chinese_font() -> None:
             break
 
     if chosen_name is None:
-        print("⚠️ 未找到本地中文字体，图表中文可能无法正常显示。")
+        print("⚠️ 未找到本地中文字体,图表中文可能无法正常显示.")
         return
 
     existing = list(plt.rcParams.get("font.sans-serif", []))
     plt.rcParams["font.family"] = ["sans-serif"]
     plt.rcParams["font.sans-serif"] = [chosen_name] + existing
-    print(f"✅ 已检测到中文字体：{chosen_name}")
+    print(f"✅ 已检测到中文字体:{chosen_name}")
 
 # 配置中文字体
 _register_candidate_fonts()
@@ -134,7 +133,7 @@ class PortfolioPosition:
     assets: List[str]              # 资产ID列表
     weights: List[float]           # 权重列表
     expected_return: float         # 预期收益率
-    actual_return: Optional[float] = None  # 实际收益率（到期后计算）
+    actual_return: Optional[float] = None  # 实际收益率(到期后计算)
 
 @dataclass
 class BacktestConfig:
@@ -208,7 +207,7 @@ class BacktestEngine:
         基于parquet数据构建回测所需的面板数据
 
         Returns:
-            完整的面板数据（从parquet加载）
+            完整的面板数据(从parquet加载)
         """
         print("从parquet数据构建回测面板...")
 
@@ -236,7 +235,7 @@ class BacktestEngine:
 
         if full_df['date'].min() > needed_start or full_df['date'].max() < needed_end:
             raise ValueError(
-                f"Parquet数据覆盖不足。\n"
+                f"Parquet数据覆盖不足.\n"
                 f"需要范围: {needed_start.strftime('%Y-%m-%d')} 到 {needed_end.strftime('%Y-%m-%d')}\n"
                 f"现有范围: {full_df['date'].min().strftime('%Y-%m-%d')} 到 {full_df['date'].max().strftime('%Y-%m-%d')}"
             )
@@ -287,7 +286,7 @@ class BacktestEngine:
 
         print(f"批量预测数据维度: {batch_data.shape}")
 
-        # 获取特征列（从parquet数据中推断）
+        # 获取特征列(从parquet数据中推断)
         excluded_cols = {"date", "item_id", "target_rank_pct", "target_8d", "target_rank_label", "pred_score", "pred_rank_pct", "item_name"}
         feature_cols = [col for col in batch_data.columns if col not in excluded_cols]
 
@@ -314,11 +313,11 @@ class BacktestEngine:
                 date_results = date_results.sort_values("pred_score", ascending=False).reset_index(drop=True)
                 results[date] = date_results
 
-        print(f"批量推理完成，成功处理 {len(results)} 个交易日")
+        print(f"批量推理完成,成功处理 {len(results)} 个交易日")
         return results
 
     def _run_inference_for_date(self, date: str) -> pd.DataFrame:
-        """为指定日期运行推理（兼容性接口，实际使用批量结果）"""
+        """为指定日期运行推理(兼容性接口,实际使用批量结果)"""
         target_date = pd.to_datetime(date)
 
         if target_date in self.batch_inference_results:
@@ -352,7 +351,7 @@ class BacktestEngine:
                 print(f"警告: 有效资产数量 {len(valid_assets)} 少于需求 {top_n}")
                 return []
 
-            # 按target_8d降序排列，选择真正的top N资产
+            # 按target_8d降序排列,选择真正的top N资产
             top_assets_data = valid_assets.nlargest(top_n, 'target_8d')
             top_asset_ids = top_assets_data['item_id'].tolist()
 
@@ -364,14 +363,14 @@ class BacktestEngine:
 
     def _get_historical_return(self, invest_date: pd.Timestamp, assets: List[str]) -> float:
         """
-        获取历史的真实8日收益率（直接从parquet的target_8d获取）
+        获取历史的真实8日收益率(直接从parquet的target_8d获取)
 
         Args:
             invest_date: 投资日期
             assets: 资产ID列表
 
         Returns:
-            平均7日收益率（扣除手续费）
+            平均7日收益率(扣除手续费)
         """
         try:
             # 从parquet数据中获取投资日的数据
@@ -400,7 +399,7 @@ class BacktestEngine:
 
     def _calculate_portfolio_return(self, invest_date: pd.Timestamp, top_n: int) -> float:
         """
-        计算指定top N的投资组合收益率（主策略：基于XGBoost预测）
+        计算指定top N的投资组合收益率(主策略:基于XGBoost预测)
 
         Args:
             invest_date: 投资日期
@@ -431,7 +430,7 @@ class BacktestEngine:
 
     def _calculate_baseline_portfolio_return(self, invest_date: pd.Timestamp, top_n: int) -> float:
         """
-        计算baseline top N的投资组合收益率（基于真实收益率排名）
+        计算baseline top N的投资组合收益率(基于真实收益率排名)
 
         Args:
             invest_date: 投资日期
@@ -441,7 +440,7 @@ class BacktestEngine:
             投资组合平均收益率
         """
         try:
-            # 使用baseline策略选择资产（基于真实收益率排名）
+            # 使用baseline策略选择资产(基于真实收益率排名)
             baseline_asset_ids = self.select_baseline_top_assets(invest_date, top_n)
 
             if len(baseline_asset_ids) < top_n:
@@ -455,9 +454,9 @@ class BacktestEngine:
             return 0.0
 
     def run_backtest(self):
-        """运行完整回测（基于parquet数据的批量优化版）"""
+        """运行完整回测(基于parquet数据的批量优化版)"""
         print("="*60)
-        print("开始XGBoost量化回测（Parquet批量优化版）")
+        print("开始XGBoost量化回测(Parquet批量优化版)")
         print("="*60)
         print(f"回测期间: {self.config.start_date} 到 {self.config.end_date}")
         print(f"初始资金: {self.config.initial_capital}")
@@ -468,7 +467,7 @@ class BacktestEngine:
         print(f"建仓期: {self.config.build_up_days} 天")
         print("="*60)
 
-        # 步骤1：加载parquet数据
+        # 步骤1:加载parquet数据
         try:
             self.full_parquet_df = self.build_full_panel_from_parquet()
         except Exception as e:
@@ -482,18 +481,18 @@ class BacktestEngine:
 
         print(f"交易日数量: {len(trading_dates)}")
 
-        # 步骤2：批量推理
+        # 步骤2:批量推理
         try:
             print("\n" + "="*40)
             print("开始基于parquet的批量推理阶段")
             print("="*40)
             self.batch_inference_results = self.batch_inference_from_parquet(trading_dates)
-            print(f"批量推理完成，获得 {len(self.batch_inference_results)} 个交易日的预测结果")
+            print(f"批量推理完成,获得 {len(self.batch_inference_results)} 个交易日的预测结果")
         except Exception as e:
             print(f"批量推理失败: {e}")
             raise
 
-        # 步骤3：回测主循环（使用预计算结果）
+        # 步骤3:回测主循环(使用预计算结果)
         print("\n" + "="*40)
         print("开始回测循环阶段")
         print("="*40)
@@ -513,7 +512,7 @@ class BacktestEngine:
                 if current_date in investment_positions:
                     matured_positions = investment_positions[current_date]
                     for position in matured_positions:
-                        # 计算实际收益（使用预计算数据）
+                        # 计算实际收益(使用预计算数据)
                         actual_return = self._calculate_portfolio_return(
                             position.invest_date,
                             len(position.assets)
@@ -532,18 +531,18 @@ class BacktestEngine:
 
                 # 2. 确定当日投资金额
                 if i < self.config.build_up_days:
-                    # 建仓期：每天投入初始资金的1/build_up_days
+                    # 建仓期:每天投入初始资金的1/build_up_days
                     invest_amount = self.config.initial_capital / self.config.build_up_days
                 else:
-                    # 正常期：投入所有可用资金
+                    # 正常期:投入所有可用资金
                     invest_amount = current_capital
 
-                # 3. 获取推理结果（使用预计算结果）
+                # 3. 获取推理结果(使用预计算结果)
                 if current_date in self.batch_inference_results:
                     predictions_df = self.batch_inference_results[current_date]
                 else:
                     if i % 10 == 0:
-                        print(f"  警告: {date_str} 没有推理结果，跳过")
+                        print(f"  警告: {date_str} 没有推理结果,跳过")
                     # 记录当前资产价值
                     total_invested = sum(pos.amount for positions in investment_positions.values()
                                        for pos in positions)
@@ -603,7 +602,7 @@ class BacktestEngine:
         matured_amount = 0.0
         for mature_date, positions in investment_positions.items():
             for position in positions:
-                # 回溯计算收益率，避免最后一批只按成本计入
+                # 回溯计算收益率,避免最后一批只按成本计入
                 actual_return = self._calculate_portfolio_return(
                     position.invest_date,
                     len(position.assets)
@@ -632,15 +631,7 @@ class BacktestEngine:
         return self.portfolio_value
 
     def run_benchmark_backtest(self, top_n: int) -> Dict[pd.Timestamp, float]:
-        """
-        运行基准策略回测（基于真实收益率排名的baseline策略）
-
-        Args:
-            top_n: 选择baseline top N个资产
-
-        Returns:
-            基准策略的资产价值序列
-        """
+        """运行基准策略回测(基于真实收益率排名的baseline策略)"""
         print(f"\n{'='*60}")
         print(f"开始Baseline策略回测: Top {top_n} (基于真实收益率排名)")
         print('='*60)
@@ -689,10 +680,10 @@ class BacktestEngine:
 
                 # 2. 确定当日投资金额
                 if i < self.config.build_up_days:
-                    # 建仓期：每天投入初始资金的1/build_up_days
+                    # 建仓期:每天投入初始资金的1/build_up_days
                     invest_amount = self.config.initial_capital / self.config.build_up_days
                 else:
-                    # 正常期：投入所有可用资金
+                    # 正常期:投入所有可用资金
                     invest_amount = current_capital
 
                 # 3. 使用baseline策略选择资产
@@ -737,7 +728,7 @@ class BacktestEngine:
                 print(f"Baseline策略 {current_date.strftime('%Y-%m-%d')} 处理失败: {e}")
                 continue
 
-        # 处理未到期投资（同样需要按收益率结算）
+        # 处理未到期投资(同样需要按收益率结算)
         matured_amount = 0.0
         for positions in investment_positions.values():
             for position in positions:
@@ -755,7 +746,7 @@ class BacktestEngine:
         final_value = current_capital + matured_amount
         portfolio_value[trading_dates[-1]] = final_value
 
-        print(f"\nBaseline策略 Top {top_n} 完成，最终资产: {final_value:.4f}")
+        print(f"\nBaseline策略 Top {top_n} 完成,最终资产: {final_value:.4f}")
         print('='*60)
 
         return portfolio_value
@@ -863,7 +854,7 @@ class BacktestEngine:
         print("="*60)
 
 def main():
-    """主函数"""
+    pass
     # 配置回测参数
     config = BacktestConfig(
         start_date='2025-11-01',
@@ -896,25 +887,6 @@ def main():
         print(f"回测运行失败: {e}")
         import traceback
         traceback.print_exc()
-
-def run_simple_backtest(start_date: str, end_date: str, top_n: int = 10):
-    """运行简化版回测，用于快速测试"""
-    config = BacktestConfig(
-        start_date=start_date,
-        end_date=end_date,
-        initial_capital=1.0,
-        commission_rate=0.01,
-        holding_days=8,
-        top_n_main=top_n,
-        top_n_benchmarks=[30, 50],  # 简化基准
-        build_up_days=8
-    )
-
-    engine = BacktestEngine(config)
-    portfolio_values = engine.run_backtest()
-    engine.print_performance_summary(portfolio_values)
-
-    return portfolio_values, engine
 
 if __name__ == "__main__":
     main()

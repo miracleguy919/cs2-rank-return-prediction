@@ -215,7 +215,7 @@ class IndicatorFrame:
 
 
 def load_hourly_kline(item_id: str) -> pd.DataFrame:
-    """Load raw hourly candles for a single asset from data_new."""
+    """Load raw hourly candles for a single asset from legacy_data."""
 
     file_path = DATA_DIR / f"{item_id}.json"
     if not file_path.exists():

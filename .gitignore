@@ -4,7 +4,6 @@ __pycache__/
 *.pyo
 
 # Deprecated collectors
-???????/
 
 # Runtime progress files
 collection_progress.json
@@ -12,12 +11,11 @@ collection_full_history_progress.json
 collection_latest_progress.json
 
 # Data directories (large)
-data_hourly/
-data_daily/
-data_new/
+data/
+旧数据收集模块/legacy_data/
 
-# Large cache files
-getdata/all_items_cache.json
+# Cache files (large)
+mappings/
 
 # TBD model and result files (large, local only)
 TBD/*.json
@@ -35,3 +33,7 @@ env/
 
 # AI context documents (local only)
 docs/
+.trae/
+
+# Trace/debug files
+*trace*.txt

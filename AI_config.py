@@ -5,7 +5,7 @@
 # 文件：AI_config.py  [AI创建]
 # 用途：统一管理项目中三种数据目录路径和映射文件路径。
 #       提供 get_data_dir(kline_type) 函数，其他脚本通过此函数获取数据目录。
-#       kline_type 可选: hourly(data_hourly/) / daily(data_daily/) / legacy(data_new/)
+#       kline_type 可选: hourly(data/hourly/) / daily(data/daily/) / legacy(旧数据收集模块/legacy_data/)
 # 被依赖：AI_collect_dual_kline, AI_collect_latest, AI_clean_data,
 #         AI_id_mapper, analyze_sector, plot_sector_indices
 # =============================================================================
@@ -21,9 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # 数据目录配置
 DATA_DIRS = {
-    "hourly": BASE_DIR / "data_hourly",   # 小时K线（新）
-    "daily": BASE_DIR / "data_daily",     # 日K线（新）
-    "legacy": BASE_DIR / "data_new",      # 旧数据（兼容）
+    "hourly": BASE_DIR / "data" / "hourly",   # 小时K线（新）
+    "daily": BASE_DIR / "data" / "daily",     # 日K线（新）
+    "legacy": BASE_DIR / "旧数据收集模块" / "legacy_data",      # 旧数据（兼容）
 }
 
 # 默认使用的数据类型
@@ -31,9 +31,9 @@ DEFAULT_KLINE_TYPE = "hourly"  # 可选: "hourly", "daily", "legacy"
 
 # 映射文件路径
 MAPPING_FILES = {
-    "all_items_cache": BASE_DIR / "getdata" / "all_items_cache.json",
-    "itemid_txt": BASE_DIR / "getdata" / "itemid.txt",
-    "itemid_market_map": BASE_DIR / "getdata" / "itemid_market_map.json",
+    "all_items_cache": BASE_DIR / "mappings" / "all_items_cache.json",
+    "itemid_txt": BASE_DIR / "mappings" / "itemid.txt",
+    "itemid_market_map": BASE_DIR / "mappings" / "itemid_market_map.json",
 }
 
 # 确保数据目录存在

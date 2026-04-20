@@ -5,8 +5,8 @@
 # 用途：读取K线数据，计算技术因子，生成经过行业中性化和截面去极值处理
 #       的滞后因子矩阵，输出XGBoost训练所需的特征数据集。
 #       依赖 rank_ic_analysis.py 中的因子计算函数。
-# 使用：python TBD/preprocess_xgb.py --data-dir data_daily
-#       --data-dir 可选: data_daily / data_hourly / data_new（默认data_daily）
+# 使用：python TBD/preprocess_xgb.py --data-dir data/daily
+#       --data-dir 可选: data/daily / data/hourly / 旧数据收集模块/legacy_data（默认data/daily）
 # =============================================================================
 """Build neutralized lagged factor matrix for XGBoost training.""" 
 
@@ -226,8 +226,8 @@ def drop_weak_cross_sections(panel: pd.DataFrame) -> pd.DataFrame:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", default="data_daily", type=Path)
-    parser.add_argument("--mapping", default="getdata/itemid.txt", type=Path)
+    parser.add_argument("--data-dir", default="data/daily", type=Path)
+    parser.add_argument("--mapping", default="mappings/itemid.txt", type=Path)
     parser.add_argument(
         "--features-file", default=PROJECT_ROOT / "TBD" / "features.md", type=Path
     )

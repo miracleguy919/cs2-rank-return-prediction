@@ -12,7 +12,7 @@
 # =============================================================================
 """
 物品数据时间连续性检查脚本
-检查 data_new 目录下以纯数字 ID 命名的 json 文件时间戳是否符合规范：
+检查 旧数据收集模块/legacy_data 目录下以纯数字 ID 命名的 json 文件时间戳是否符合规范：
 1. 时间戳是否为北京时间整点
 2. 相邻记录时间戳相差 1 小时
 """
@@ -32,10 +32,10 @@ _parser.add_argument(
     "--kline-type",
     choices=["hourly", "daily", "legacy"],
     default="daily",
-    help="K线数据类型: hourly(data_hourly/), daily(data_daily/), legacy(data_new/)",
+    help="K线数据类型: hourly(data/hourly/), daily(data/daily/), legacy(旧数据收集模块/legacy_data/)",
 )
 _args, _ = _parser.parse_known_args()
-_KLINE_TYPE_MAP = {"hourly": "data_hourly", "daily": "data_daily", "legacy": "data_new"}
+_KLINE_TYPE_MAP = {"hourly": "data/hourly", "daily": "data/daily", "legacy": "旧数据收集模块/legacy_data"}
 DATA_DIR = _KLINE_TYPE_MAP[_args.kline_type]
 print(f"📊 使用数据类型: {_args.kline_type}")
 print(f"📁 数据目录: {DATA_DIR}")

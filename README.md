@@ -1,6 +1,6 @@
 
 
-1.获取数据：运行backfill_hourly_kline.py，从getdata/itemid.txt里按顺序抓取。之后需要每日补充，用get_hourly_kline.py。请不要过频繁调用。使用check_item_timestamp_continuity.py做连续性检查和线性插值处理
+1.获取数据：运行backfill_hourly_kline.py，从mappings/itemid.txt里按顺序抓取。之后需要每日补充，用get_hourly_kline.py。请不要过频繁调用。使用check_item_timestamp_continuity.py做连续性检查和线性插值处理
 
 用TBD/backtest_xgb.py作回测
 

@@ -41,12 +41,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--data-dir",
-        default="data_new",
+        default="旧数据收集模块/legacy_data",
         help="Directory containing hourly JSON files (default: %(default)s).",
     )
     parser.add_argument(
         "--mapping",
-        default="getdata/itemid.txt",
+        default="mappings/itemid.txt",
         help="Industry mapping file used during neutralization (default: %(default)s).",
     )
     parser.add_argument(

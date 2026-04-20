@@ -67,8 +67,8 @@ def load_item_name_map(path: Path) -> dict[str, str]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--date", default="2025-08-17", help="Target date (YYYY-MM-DD) for inference.")
-    parser.add_argument("--data-dir", type=Path, default=PROJECT_ROOT / "data_new")
-    parser.add_argument("--mapping", type=Path, default=PROJECT_ROOT / "getdata" / "itemid.txt")
+    parser.add_argument("--data-dir", type=Path, default=PROJECT_ROOT / "旧数据收集模块" / "legacy_data")
+    parser.add_argument("--mapping", type=Path, default=PROJECT_ROOT / "mappings" / "itemid.txt")
     parser.add_argument("--features-file", type=Path, default=PROJECT_ROOT / "TBD" / "features.md")
     parser.add_argument("--history-days", type=int, default=90, help="How many past days to include when computing lagged factors.")
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)

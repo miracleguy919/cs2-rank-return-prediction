@@ -4,7 +4,7 @@ Backfill hourly K-line history by paging backwards with maxTime windows.
 
 This script reuses the lookup helpers from get_hourly_kline.py, sends repeated
 type=1 requests with decreasing maxTime values, keeps only on-the-hour candles,
-and merges the historical data into data_new/*.json.
+and merges the historical data into legacy_data/*.json.
 """
 
 from __future__ import annotations

@@ -38,7 +38,7 @@ from analyze_single_asset import (
 from AI_config import get_data_dir
 
 BASE_DIR = Path(__file__).resolve().parent
-ITEM_SPEC_PATH = BASE_DIR / "getdata" / "itemid.txt"
+ITEM_SPEC_PATH = BASE_DIR / "mappings" / "itemid.txt"
 
 # ---- K线类型选择 ---------------------------------------------------------
 _sector_parser = argparse.ArgumentParser(add_help=False)
@@ -46,7 +46,7 @@ _sector_parser.add_argument(
     "--kline-type",
     choices=["hourly", "daily", "legacy"],
     default="daily",
-    help="K线数据类型: hourly(data_hourly/), daily(data_daily/), legacy(data_new/)",
+    help="K线数据类型: hourly(data/hourly/), daily(data/daily/), legacy(旧数据收集模块/legacy_data/)",
 )
 _sector_args, _ = _sector_parser.parse_known_args()
 KLINE_TYPE = _sector_args.kline_type
@@ -80,7 +80,7 @@ class SectorMember:
 
 
 def parse_sector_members(spec_path: Path) -> Dict[str, List[SectorMember]]:
-    """Parse getdata/itemid.txt into a mapping of sector name -> members."""
+    """Parse mappings/itemid.txt into a mapping of sector name -> members."""
 
     if not spec_path.exists():
         raise FileNotFoundError(f"未找到板块定义文件: {spec_path}")

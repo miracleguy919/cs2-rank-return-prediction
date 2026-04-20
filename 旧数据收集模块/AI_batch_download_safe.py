@@ -17,12 +17,12 @@ import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data_new"
+DATA_DIR = BASE_DIR / "legacy_data"
 
 
 def load_all_item_ids():
     """读取itemid.txt中的所有饰品ID"""
-    itemid_file = BASE_DIR / "getdata" / "itemid.txt"
+    itemid_file = BASE_DIR / ".." / "mappings" / "itemid.txt"
     
     item_ids = []
     with open(itemid_file, "r", encoding="utf-8") as f:

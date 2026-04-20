@@ -5,8 +5,8 @@
 # 用途：计算所有饰品的横截面因子Rank IC（信息系数），评估因子预测能力。
 #       同时作为 TBD/preprocess_xgb.py 的基础库（提供因子计算函数）。
 #       输出：IC热力图（PNG）和因子统计摘要（CSV）。
-# 使用：python rank_ic_analysis.py --data-dir data_daily
-#       --data-dir 可选: data_daily / data_hourly / data_new（默认data_daily）
+# 使用：python rank_ic_analysis.py --data-dir data/daily
+#       --data-dir 可选: data/daily / data/hourly / 旧数据收集模块/legacy_data（默认data/daily）
 #       --start / --end 指定分析时间范围（YYYY-MM-DD）
 # =============================================================================
 """Compute cross-sectional Rank IC for daily factors aggregated from hourly data."""
@@ -40,12 +40,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--data-dir",
-        default="data_daily",
+        default="data/daily",
         help="Directory containing K-line JSON files (default: %(default)s).",
     )
     parser.add_argument(
         "--mapping",
-        default="getdata/itemid.txt",
+        default="mappings/itemid.txt",
         help="File mapping item IDs to industries (default: %(default)s).",
     )
     parser.add_argument(
