@@ -14,8 +14,30 @@ collection_latest_progress.json
 data/
 旧数据收集模块/legacy_data/
 
-# Cache files (large)
-mappings/
+# AI context documents (local only)
+AGENTS.md
+CHANGELOG.md
+PLANNED_ITEMS.md
+docs/
+.trae/
+
+# Mappings: 只上传 _tools/ 代码 + 三件套核心 (itemid.txt + itemid_market_map.json)
+# 其余 .json 数据文件可重新拉取/生成, 不上传
+mappings/agents_mapping_plan.json
+mappings/agents_meta.json
+mappings/all_items_cache.json
+mappings/bymykel_en_agents.json
+mappings/bymykel_en_skins.json
+mappings/bymykel_zh_agents.json
+mappings/bymykel_zh_skins.json
+mappings/dead_hand_meta.json
+mappings/special_wear_skins.json
+mappings/weapons_meta.json
+mappings/weapons_steamdt_ids.json
+mappings/weapons_to_integrate.json
+mappings/*.bak
+mappings/*.bak_*
+mappings/_tools/__pycache__/
 
 # TBD model and result files (large, local only)
 TBD/*.json
@@ -31,9 +53,9 @@ env/
 .idea/
 *.swp
 
-# AI context documents (local only)
-docs/
-.trae/
-
 # Trace/debug files
 *trace*.txt
+
+# Backup files
+*.bak
+*.bak_*
