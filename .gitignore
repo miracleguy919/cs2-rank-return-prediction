@@ -59,3 +59,4 @@ env/
 # Backup files
 *.bak
 *.bak_*
+verify/bak_v3_full_clean/
