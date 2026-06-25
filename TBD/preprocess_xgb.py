@@ -4,9 +4,9 @@
 # 文件：TBD/preprocess_xgb.py
 # 用途：读取K线数据，计算技术因子，生成经过行业中性化和截面去极值处理
 #       的滞后因子矩阵，输出XGBoost训练所需的特征数据集。
-#       依赖 rank_ic_analysis.py 中的因子计算函数。
+#       依赖 TBD/factor_library.py 中的因子计算函数。
 # 使用：python TBD/preprocess_xgb.py --data-dir data/daily
-#       --data-dir 可选: data/daily / data/hourly / 旧数据收集模块/legacy_data（默认data/daily）
+#       --data-dir 可选: data/daily / data/hourly（默认data/daily）
 # =============================================================================
 """Build neutralized lagged factor matrix for XGBoost training.""" 
 
@@ -26,7 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from rank_ic_analysis import (  # noqa: E402  pylint: disable=wrong-import-position
+from TBD.factor_library import (  # noqa: E402  pylint: disable=wrong-import-position
     aggregate_to_daily,
     add_alpha101_features,
     compute_features,

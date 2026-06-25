@@ -32,7 +32,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-from rank_ic_analysis import add_alpha101_features, parse_window_endpoint  # noqa: E402
+from TBD.factor_library import add_alpha101_features, parse_window_endpoint  # noqa: E402
 from TBD.preprocess_xgb import (  # noqa: E402  pylint: disable=wrong-import-position
     attach_neutralized_factors,
     build_panel,
@@ -42,14 +42,14 @@ from TBD.preprocess_xgb import (  # noqa: E402  pylint: disable=wrong-import-pos
 )
 
 
-DEFAULT_MODEL = PROJECT_ROOT / "TBD" / "xgb_rank_model1.json"
+DEFAULT_MODEL = PROJECT_ROOT / "TBD" / "xgb_rank_model.json"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--date", default="2025-11-28", help="Target date (YYYY-MM-DD) for inference.")
     parser.add_argument("--history-days", type=int, default=90, help="Lookback window for building lags.")
-    parser.add_argument("--data-dir", type=Path, default=PROJECT_ROOT / "旧数据收集模块" / "legacy_data")
+    parser.add_argument("--data-dir", type=Path, default=PROJECT_ROOT / "data" / "hourly")
     parser.add_argument("--mapping", type=Path, default=PROJECT_ROOT / "mappings" / "itemid.txt")
     parser.add_argument("--features-file", type=Path, default=PROJECT_ROOT / "TBD" / "features.md")
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)

@@ -167,10 +167,10 @@ class BacktestEngine:
             config: 回测配置参数
         """
         self.config = config
-        self.data_dir = PROJECT_ROOT / "data_new"
-        self.mapping_file = PROJECT_ROOT / "getdata" / "itemid.txt"
+        self.data_dir = PROJECT_ROOT / "data" / "daily"
+        self.mapping_file = PROJECT_ROOT / "mappings" / "itemid.txt"
         self.features_file = PROJECT_ROOT / "TBD" / "features.md"
-        self.model_file = PROJECT_ROOT / "TBD" / "xgb_rank_model1.json"
+        self.model_file = PROJECT_ROOT / "TBD" / "xgb_rank_model.json"
         self.dataset_parquet = PROJECT_ROOT / "TBD" / "factor_dataset.parquet"
 
         # 加载必要的配置和数据
@@ -854,7 +854,6 @@ class BacktestEngine:
         print("="*60)
 
 def main():
-    pass
     # 配置回测参数
     config = BacktestConfig(
         start_date='2025-11-01',
@@ -878,7 +877,7 @@ def main():
         engine.print_performance_summary(portfolio_values)
 
         # 绘制结果
-        output_path = Path(__file__).parent / 'backtest_results6.png'
+        output_path = Path(__file__).parent / 'backtest_results.png'
         engine.plot_results(portfolio_values, save_path=output_path)
 
         print(f"\n回测结果图表已保存到: {output_path}")

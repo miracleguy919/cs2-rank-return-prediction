@@ -42,6 +42,7 @@ mappings/_tools/__pycache__/
 # TBD model and result files (large, local only)
 TBD/*.json
 TBD/*.png
+TBD/*.parquet
 
 # Virtual environments
 venv/

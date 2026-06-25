@@ -16,7 +16,7 @@
 
 对比:
     - auto_kline_history.py  : 全量抓取 + 跳过已抓 (首次跑 / 补漏)
-    - auto_kline_incremental.py (本脚本): 抓最新 1 页 + merge 现有数据 (任务计划 00:01 日常跑)
+    - auto_kline_incremental.py (本脚本): 抓最新 1 页 + merge 现有数据 (手动运行)
 """
 
 import sys
@@ -40,6 +40,7 @@ from urllib.parse import quote
 from kline.auto_kline_history import (
     KlineCommon, merge_with_skip, append_progress, log,
     atomic_write_json, normalize_records, get_id_mapper,
+    log_plan_progress,
     HOURLY_DATA_DIR, DAILY_DATA_DIR, PROGRESS_FILE,
 )
 
@@ -287,23 +288,25 @@ class IncrementalCrawler(KlineCommon):
     def _print_summary(self) -> None:
         self.stats["duration_seconds"] = round(time.time() - self.start_time, 2)
         log("=" * 80)
-        log("🔄 增量更新完成 / 终止")
+        log("[INCREMENTAL] 🔄 增量更新完成 / 终止")
         log("=" * 80)
-        log(f"📊 总饰品:    {self.stats['total']}")
-        log(f"✅ 完成:      {self.stats['completed']}")
-        log(f"⏭️  跳过:      {self.stats['skipped']}")
-        log(f"❌ 失败:      {self.stats['failed']}")
-        log(f"⏱️  耗时:      {self.stats['duration_seconds']:.1f}s")
-        log(f"📁 progress: {PROGRESS_FILE}")
-        log(f"📁 log:      data/kline_log.txt")
+        log(f"[INCREMENTAL] 📊 总饰品:    {self.stats['total']}")
+        log(f"[INCREMENTAL] ✅ 完成:      {self.stats['completed']}")
+        log(f"[INCREMENTAL] ⏭️  跳过:      {self.stats['skipped']}")
+        log(f"[INCREMENTAL] ❌ 失败:      {self.stats['failed']}")
+        log(f"[INCREMENTAL] ⏱️  耗时:      {self.stats['duration_seconds']:.1f}s")
+        log_plan_progress("[INCREMENTAL]")
+        log(f"[INCREMENTAL] 📁 progress: {PROGRESS_FILE}")
+        log(f"[INCREMENTAL] 📁 log:      data/kline_log.txt")
 
     # ------------------------------------------------------------------------
     # 主入口
     # ------------------------------------------------------------------------
     async def run(self) -> None:
         log("=" * 80)
-        log("🔄 增量更新 K线数据 (跳过当前未收盘周期)")
+        log("[INCREMENTAL] 🔄 增量更新 K线数据 (跳过当前未收盘周期)")
         log("=" * 80)
+        log_plan_progress("[INCREMENTAL]")
         log(f"HEADLESS={self.headless}  API_DELAY={self.api_delay}s  "
             f"ITEM_DELAY={self.item_delay}s")
         log(f"--include-empty: {self.include_empty}  "
@@ -359,7 +362,7 @@ class IncrementalCrawler(KlineCommon):
 # ============================================================================
 async def main():
     parser = argparse.ArgumentParser(
-        description="增量更新 K线数据 (跳过当前未收盘周期, 任务计划 00:01 日常跑)",
+        description="增量更新 K线数据 (跳过当前未收盘周期, 手动运行)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "示例:\n"

@@ -34,7 +34,7 @@ from TBD.train_xgb import prepare_features  # noqa: E402  pylint: disable=wrong-
 
 
 DEFAULT_DATASET = Path(__file__).resolve().parent / "factor_dataset.parquet"
-DEFAULT_MODEL = Path(__file__).resolve().parent / "xgb_rank_model3.json"
+DEFAULT_MODEL = Path(__file__).resolve().parent / "xgb_rank_model.json"
 
 
 def parse_args() -> argparse.Namespace:

@@ -222,6 +222,58 @@ def log(message: str, also_print: bool = True) -> None:
         _safe_print(line)
 
 
+# --- v3 计划进展统计 (history / incremental 共用) ---
+def _load_plan_ids() -> set:
+    """读取 mappings/itemid.txt 的 v3 计划 ID 集合"""
+    plan_ids = set()
+    try:
+        txt_path = BASE_DIR / "mappings" / "itemid.txt"
+        for line in txt_path.read_text(encoding="utf-8").split("\n"):
+            s = line.strip()
+            if not s or s.startswith("//") or s.startswith("#"):
+                continue
+            parts = re.split(r"[:：]", s, 1)
+            if len(parts) == 2 and parts[0].strip().isdigit():
+                plan_ids.add(parts[0].strip())
+    except Exception:
+        pass
+    return plan_ids
+
+
+def _count_crawled() -> int:
+    """统计 data/hourly/ 中已落盘的 v3 计划物品数"""
+    try:
+        return len(list(Path(HOURLY_DATA_DIR).glob("*.json")))
+    except Exception:
+        return 0
+
+
+def log_plan_progress(tag: str) -> None:
+    """输出 v3 计划整体覆盖率 (history/incremental 启动/收尾时调用)
+
+    Args:
+        tag: "[HISTORY]" 或 "[INCREMENTAL]"
+    """
+    try:
+        plan_ids = _load_plan_ids()
+        plan_total = len(plan_ids)
+        crawled = _count_crawled()
+        if plan_total == 0:
+            log(f"{tag} ⚠️  v3 计划列表为空 (mappings/itemid.txt?)")
+            return
+        # 计算交集 (已抓且在计划内)
+        done_in_plan = 0
+        hourly_dir = Path(HOURLY_DATA_DIR)
+        for lid in plan_ids:
+            if (hourly_dir / f"{lid}.json").exists():
+                done_in_plan += 1
+        pct = done_in_plan * 100.0 / plan_total
+        remaining = plan_total - done_in_plan
+        log(f"{tag} 📋 v3 计划进展: {done_in_plan}/{plan_total} = {pct:.1f}%  (剩余 {remaining} 条)")
+    except Exception as e:
+        log(f"{tag} ⚠️  进展统计失败: {e}")
+
+
 def atomic_write_json(path: str, data, max_retries: int = 5) -> None:
     """原子写盘: 先写 .tmp 再 rename, 防止进程崩溃导致文件损坏
 
@@ -1110,8 +1162,9 @@ class HistoryCrawler(KlineCommon):
     # ------------------------------------------------------------------------
     async def run(self) -> None:
         log("=" * 80)
-        log("📊 History 全量抓取启动 (auto_kline_history.py)")
+        log("[HISTORY] 📊 History 全量抓取启动 (auto_kline_history.py)")
         log("=" * 80)
+        log_plan_progress("[HISTORY]")
         log(f"HEADLESS={self.headless}  api_delay={self.api_delay}s  "
             f"max_pages_1H={self.max_pages_1H}  max_pages_1D={self.max_pages_1D}")
 
@@ -1192,14 +1245,15 @@ class HistoryCrawler(KlineCommon):
             self.stats["total"] = len(self.items)
 
             log("=" * 80)
-            log("🎉 History 抓取完成 / 终止")
+            log("[HISTORY] 🎉 History 抓取完成 / 终止")
             log("=" * 80)
-            log(f"📊 总饰品:    {self.stats['total']}")
-            log(f"✅ 已完成:    {self.stats['completed']}")
-            log(f"❌ 失败:      {self.stats['failed']}")
-            log(f"⏭️  跳过:      {self.stats['skipped']}")
-            log(f"⏱️  耗时:      {self.stats['duration_seconds']:.1f}s")
-            log(f"📁 progress: {PROGRESS_FILE}")
+            log(f"[HISTORY] 📊 总饰品:    {self.stats['total']}")
+            log(f"[HISTORY] ✅ 已完成:    {self.stats['completed']}")
+            log(f"[HISTORY] ❌ 失败:      {self.stats['failed']}")
+            log(f"[HISTORY] ⏭️  跳过:      {self.stats['skipped']}")
+            log(f"[HISTORY] ⏱️  耗时:      {self.stats['duration_seconds']:.1f}s")
+            log_plan_progress("[HISTORY]")
+            log(f"[HISTORY] 📁 progress: {PROGRESS_FILE}")
 
             await self.close()
 
