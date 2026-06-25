@@ -43,6 +43,7 @@ mappings/_tools/__pycache__/
 TBD/*.json
 TBD/*.png
 TBD/*.parquet
+TBD/*.log
 
 # Virtual environments
 venv/

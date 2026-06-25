@@ -12,9 +12,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
+
+# Windows GBK 终端兼容：强制 stdout/stderr 用 utf-8
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 import numpy as np
 import pandas as pd
@@ -504,6 +513,18 @@ def main() -> None:
             verdict_cv = "❌ 0.059 大概率是假象（偏差 > 0.04，有严重泄漏）"
         print(f"   判定: {verdict_cv}")
 
+    # DSR 局限性 caveat（审查发现的问题 1+2）：
+    # 1. 9 组 grid search 来自同一份 train/val 切分，并非独立试验
+    #    → sigma_sr 被低估，DSR 被高估
+    # 2. 这 9 组结果本身就含数据泄漏（P0.1 CV 已证实）
+    #    → DSR 通过 ≠ 真实预测能力，只反映"在含泄漏的 grid 中选最好的运气"
+    dsr_caveat = (
+        "DSR 局限性: 9 组 grid search 来自同一份 train/val 切分 (非独立试验, sigma_sr 被低估), "
+        "且这 9 组结果本身就含数据泄漏 (P0.1 CV 已证实 bias > 0.04). "
+        "DSR 通过 ≠ 真实预测能力, 只反映'在含泄漏的 grid 中选最好的运气'. "
+        "需以 Purged K-Fold 的 mean_test_spearman 为准."
+    )
+
     if "error" not in dsr_summary:
         dsr_verdict = dsr_summary["dsr_test"]["verdict"]
         print(f"\n2. DSR 检验:")
@@ -513,15 +534,26 @@ def main() -> None:
         elif "MARGINAL" in dsr_verdict:
             verdict_dsr = "⚠️ 0.059 略高于运气线，但有运气成分"
         else:
-            verdict_dsr = "✅ 0.059 显著高于运气线，真实有效"
+            # 修正: 原结论"真实有效"会被误读，加 caveat
+            verdict_dsr = (
+                "⚠️ 0.059 在 9 组 grid 中显著高于运气线 (DSR 通过), "
+                "但 9 组含数据泄漏且非独立试验, DSR 通过 ≠ 真实预测能力. "
+                "以 Purged K-Fold 结论为准."
+            )
         print(f"   说明: {verdict_dsr}")
+        print(f"   ⚠️ DSR 局限性: {dsr_caveat}")
 
-    # 综合结论
-    print(f"\n3. 综合结论:")
+    # 综合结论 (修正: CV 显示泄漏时, 无论 DSR 如何, 都判定为假象)
+    print(f"\n3. 综合结论 (CV 优先, DSR 仅参考):")
     if "error" not in cv_summary and "error" not in dsr_summary:
-        if "ARTIFACT" in dsr_verdict or bias > 0.04:
-            final = "❌ 0.059 大概率是假象，需重新设计实验"
-        elif "MARGINAL" in dsr_verdict or bias > 0.02:
+        # CV 是金标准: 如果 bias > 0.04, 直接判定假象, 不受 DSR 影响
+        if bias > 0.04:
+            final = (
+                "❌ 0.059 大概率是数据泄漏假象 (Purged K-Fold bias > 0.04). "
+                "DSR 通过仅说明含泄漏的 grid 中 0.059 高于运气线, 不代表真实预测能力. "
+                "需重新设计实验 (Purged K-Fold + 独立试验)."
+            )
+        elif "ARTIFACT" in dsr_verdict or bias > 0.02:
             final = "⚠️ 0.059 部分真实部分运气，谨慎继续"
         else:
             final = "✅ 0.059 大概率真实，可继续优化"
@@ -533,6 +565,8 @@ def main() -> None:
         "dsr_test": dsr_summary,
         "verdict_cv": verdict_cv if "error" not in cv_summary else "ERROR",
         "verdict_dsr": verdict_dsr if "error" not in dsr_summary else "ERROR",
+        "dsr_caveat": dsr_caveat,
+        "final_verdict": final if ("error" not in cv_summary and "error" not in dsr_summary) else "ERROR",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8") as f:
