@@ -8,7 +8,7 @@
 # 使用：python TBD/preprocess_xgb.py --data-dir data/daily
 #       --data-dir 可选: data/daily / data/hourly（默认data/daily）
 # =============================================================================
-"""Build neutralized lagged factor matrix for XGBoost training.""" 
+"""Build neutralized lagged factor matrix for XGBoost training."""
 
 from __future__ import annotations
 
@@ -21,7 +21,6 @@ from typing import Iterable, List, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-# Reuse the battle-tested feature engineering helpers.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -34,14 +33,17 @@ from TBD.factor_library import (  # noqa: E402  pylint: disable=wrong-import-pos
     load_hourly_json,
     load_industry_mapping,
     neutralize_cross_section,
-    neutralize_target_by_industry,
     parse_window_endpoint,
 )
 
 
 ASIA_SHANGHAI = "Asia/Shanghai"
-CONTINUOUS_COVARIATES = ["log_price_ma","log_volume_ma"]
+CONTINUOUS_COVARIATES = ["log_price_ma", "log_volume_ma"]
 MIN_CROSS_SECTION = 20
+DEFAULT_HORIZON = 5
+FLAT_RETURN_THRESHOLD = 0.01
+RANK_BUCKET_BINS = (-np.inf, 0.4, 0.7, 0.9, 0.97, np.inf)
+RANK_BUCKET_LABELS = [0.0, 1.0, 3.0, 7.0, 10.0]
 
 
 @dataclass(frozen=True)
@@ -53,24 +55,16 @@ class FactorLag:
 
 
 def parse_factor_lag_file(path: Path) -> List[FactorLag]:
-    """Read factor/lag pairs from Markdown table or CSV content.
-
-    The file can be either the legacy whitespace table (rank, factor, lag) or
-    the CSV-style output used by selected_factors.csv (see TBD/features.md).
-    """
-
+    """Read factor/lag pairs from Markdown table or CSV content."""
     combos: List[FactorLag] = []
 
-    # Peek at the first non-empty line to determine parsing mode.
     with path.open(encoding="utf-8") as handle:
         lines = [line for line in handle if line.strip()]
 
     if lines and "," in lines[0]:
         df = pd.read_csv(path)
         if "factor" not in df.columns or "lag" not in df.columns:
-            raise ValueError(
-                f"CSV factor file {path} must contain 'factor' and 'lag' columns."
-            )
+            raise ValueError(f"CSV factor file {path} must contain 'factor' and 'lag' columns.")
         for _, row in df.iterrows():
             try:
                 lag = int(row["lag"])
@@ -85,18 +79,15 @@ def parse_factor_lag_file(path: Path) -> List[FactorLag]:
             parts = line.split()
             if len(parts) < 3:
                 continue
-            # First column is rank index, second is factor name, third is lag.
             try:
                 int(parts[0])
                 lag = int(parts[2])
             except ValueError:
                 continue
-            factor = parts[1]
-            combos.append(FactorLag(name=factor, lag=lag))
+            combos.append(FactorLag(name=parts[1], lag=lag))
 
     if not combos:
         raise ValueError(f"No factor/lag definitions parsed from {path}.")
-
     return combos
 
 
@@ -106,7 +97,23 @@ def ensure_columns_exist(df: pd.DataFrame, columns: Sequence[str]) -> None:
         raise KeyError(f"Missing required columns for neutralization: {missing}")
 
 
-def compute_target_rank(df: pd.DataFrame) -> pd.Series:
+def compute_target_returns(panel: pd.DataFrame, horizon: int) -> pd.DataFrame:
+    """Create future-return target columns for a configurable horizon."""
+    panel = panel.copy()
+    target_col = f"target_{horizon}d"
+    grouped_close = panel.groupby("item_id", sort=False)["close"]
+    panel[target_col] = grouped_close.shift(-horizon) / panel["close"] - 1
+
+    target_raw = panel[target_col]
+    panel["target_up_down_flat_label"] = np.select(
+        [target_raw <= -FLAT_RETURN_THRESHOLD, target_raw >= FLAT_RETURN_THRESHOLD],
+        [0.0, 2.0],
+        default=1.0,
+    ).astype(float)
+    return panel
+
+
+def compute_target_rank(panel: pd.DataFrame, target_col: str) -> pd.Series:
     """Return cross-sectional percentile ranks of target within each date."""
 
     def _rank_pct(values: pd.Series) -> pd.Series:
@@ -117,16 +124,11 @@ def compute_target_rank(df: pd.DataFrame) -> pd.Series:
         ranked[~valid] = np.nan
         return ranked
 
-    return df.groupby("date")["target_8d"].transform(_rank_pct)
-
-
-RANK_BUCKET_BINS = (-np.inf, 0.4, 0.7, 0.9,0.97, np.inf)
-RANK_BUCKET_LABELS = [0.0, 1.0, 3.0, 7.0, 10.0]
+    return panel.groupby("date")[target_col].transform(_rank_pct)
 
 
 def bucketize_rank(series: pd.Series) -> pd.Series:
     """Map percentile ranks into discrete buckets for NDCG training."""
-
     return pd.cut(
         series,
         bins=RANK_BUCKET_BINS,
@@ -144,7 +146,6 @@ def build_panel(
     history_days: int,
 ) -> pd.DataFrame:
     """Load hourly JSONs, aggregate to daily, and attach meta columns."""
-
     extended_start = start_ts - pd.Timedelta(days=history_days) if start_ts is not None else None
     mapping = load_industry_mapping(mapping_path)
     records: List[pd.DataFrame] = []
@@ -170,12 +171,8 @@ def build_panel(
     return panel
 
 
-def attach_neutralized_factors(
-    panel: pd.DataFrame,
-    unique_factors: Iterable[str],
-) -> pd.DataFrame:
+def attach_neutralized_factors(panel: pd.DataFrame, unique_factors: Iterable[str]) -> pd.DataFrame:
     """Neutralize selected factors and append *_n columns to the panel."""
-
     unique_factors = list(unique_factors)
     ensure_columns_exist(panel, CONTINUOUS_COVARIATES)
     ensure_columns_exist(panel, unique_factors)
@@ -189,15 +186,11 @@ def attach_neutralized_factors(
 
     for factor in unique_factors:
         panel[f"{factor}_n"] = residuals[factor]
-
     return panel
 
 
-def create_lagged_columns(
-    panel: pd.DataFrame, combos: Sequence[FactorLag]
-) -> Tuple[pd.DataFrame, List[str]]:
+def create_lagged_columns(panel: pd.DataFrame, combos: Sequence[FactorLag]) -> Tuple[pd.DataFrame, List[str]]:
     """Generate lagged versions of neutralized factors per item without fragmenting."""
-
     grouped = panel.groupby("item_id", sort=False)
     feature_cols: List[str] = []
     lagged_data: dict[str, pd.Series] = {}
@@ -214,23 +207,19 @@ def create_lagged_columns(
 
     lagged_df = pd.DataFrame(lagged_data, index=panel.index)
     panel = pd.concat([panel, lagged_df], axis=1)
-
     return panel, feature_cols
 
 
 def drop_weak_cross_sections(panel: pd.DataFrame) -> pd.DataFrame:
     counts = panel.groupby("date")["item_id"].transform("count")
-    mask = counts >= MIN_CROSS_SECTION
-    return panel.loc[mask].copy()
+    return panel.loc[counts >= MIN_CROSS_SECTION].copy()
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", default="data/daily", type=Path)
     parser.add_argument("--mapping", default="mappings/itemid.txt", type=Path)
-    parser.add_argument(
-        "--features-file", default=PROJECT_ROOT / "TBD" / "features.md", type=Path
-    )
+    parser.add_argument("--features-file", default=PROJECT_ROOT / "TBD" / "features.md", type=Path)
     parser.add_argument(
         "--output",
         default=PROJECT_ROOT / "TBD" / "factor_dataset.parquet",
@@ -239,18 +228,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--start", type=str, default="2025-03-01")
     parser.add_argument("--end", type=str, default="2025-11-19")
-    parser.add_argument(
-        "--history-days",
-        type=int,
-        default=90,
-        help="Historical lookback days to keep for long-window factors and lag generation.",
-    )
+    parser.add_argument("--history-days", type=int, default=90)
+    parser.add_argument("--horizon", type=int, choices=[3, 5, 8], default=DEFAULT_HORIZON)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-
     combos = parse_factor_lag_file(args.features_file)
     unique_factors = sorted({combo.name for combo in combos})
 
@@ -263,11 +247,11 @@ def main() -> None:
     alpha_needed = [name for name in unique_factors if name.lower().startswith("alpha")]
     add_alpha101_features(panel, only=alpha_needed if alpha_needed else None)
     panel = drop_weak_cross_sections(panel)
+    panel = compute_target_returns(panel, args.horizon)
 
     panel = attach_neutralized_factors(panel, unique_factors)
     panel, feature_cols = create_lagged_columns(panel, combos)
 
-    # Final time filter after lag generation to retain edge lags
     if start_ts is not None or end_ts is not None:
         panel_ts = panel["date"].dt.tz_localize(ASIA_SHANGHAI) + pd.Timedelta(hours=15)
         mask = pd.Series(True, index=panel.index)
@@ -277,19 +261,20 @@ def main() -> None:
             mask &= panel_ts <= end_ts
         panel = panel.loc[mask]
 
-    panel["target_rank_pct"] = compute_target_rank(panel)
+    target_col = f"target_{args.horizon}d"
+    panel["target_rank_pct"] = compute_target_rank(panel, target_col)
     panel["target_rank_label"] = bucketize_rank(panel["target_rank_pct"])
 
-    required_cols = ["target_rank_pct", "target_rank_label", "target_8d"] + feature_cols
+    required_cols = [target_col, "target_rank_pct", "target_rank_label", "target_up_down_flat_label"] + feature_cols
     panel = panel.dropna(subset=required_cols)
 
-    # Keep only the columns needed downstream.
     final_cols = [
         "date",
         "item_id",
-        "target_8d",
+        target_col,
         "target_rank_pct",
         "target_rank_label",
+        "target_up_down_flat_label",
     ] + feature_cols
     final_df = panel[final_cols].sort_values(["date", "item_id"])
 
@@ -298,10 +283,8 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     final_df.to_parquet(args.output, index=False)
-
-    print(
-        f"Saved {len(final_df):,} rows with {len(feature_cols)} lagged factors to {args.output}."
-    )
+    print(f"Saved {len(final_df):,} rows with {len(feature_cols)} lagged factors to {args.output}.")
+    print(f"Target horizon: {args.horizon}d")
 
 
 if __name__ == "__main__":
